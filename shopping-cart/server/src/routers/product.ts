@@ -3,6 +3,7 @@ import { fromZodError } from 'zod-validation-error'
 import {z} from 'zod'
 import { db } from '@/common/helpers/db'
 import { jsonParser } from '@/common/parsers/json-parser'
+import {Prisma} from '@prisma-generated/client'
 
 export const productRouter = express.Router()
 
@@ -35,13 +36,23 @@ productRouter.get('/', async (req, res) => {
 
   const {page, limit, ids} = filter
 
-  const products = await db.item.findMany({
-    skip: page * limit,
-    take: limit,
-    where: ids?.length ? {id: {in: ids}} : undefined
-  })
+  const where: Prisma.ItemWhereInput | undefined = ids?.length ? {id: {in: ids}} : undefined
 
-  res.send({ products })
+  try {
+    const [products, total] = await Promise.all([
+      await db.item.findMany({
+        skip: page * limit,
+        take: limit,
+        where,
+      }),
+      await db.item.count({ where })
+    ])
+
+    res.send({ products, total })
+  } catch (error) {
+    console.error(error)
+    res.status(500).send({error: 'Something went wrong while getting products'})
+  }
 })
 
 const patchSchema = z.object({
