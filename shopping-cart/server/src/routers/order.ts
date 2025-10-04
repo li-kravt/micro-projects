@@ -76,6 +76,7 @@ orderRouter.get('/:id', async (req, res) => {
 
     if (!order) {
       res.status(404).send({error: 'Order not found'})
+      return
     }
 
     res.send({order})
