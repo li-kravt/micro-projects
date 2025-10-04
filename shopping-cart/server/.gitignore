@@ -26,3 +26,6 @@ dist-ssr
 /src/generated/prisma
 
 /src/generated/prisma
+
+prisma/dev.db-journal
+prisma/dev.db
