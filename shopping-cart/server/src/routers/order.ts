@@ -6,6 +6,53 @@ import { fromZodError } from 'zod-validation-error'
 
 export const orderRouter = express.Router()
 
+const DEFAULT_FILTER = {
+  page: 1,
+  limit: 10,
+}
+
+const filterSchema = z.object({
+  page: z.preprocess((value: string) => Number(value), z.int().min(1)).default(DEFAULT_FILTER.page).transform(page => page - 1),
+  limit: z.preprocess((value: string) => Number(value), z.int().min(1).max(10).optional()).default(DEFAULT_FILTER.limit),
+})
+
+orderRouter.get('/', async (req, res) => {
+  let filter
+
+  try {
+    filter = filterSchema.parse(req.query)
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      const {message} = fromZodError(error)
+      res.status(400).send({error: message})
+      return
+    }
+
+    res.status(500).send({error: 'Something went wrong'})
+    return
+  }
+
+  const {page, limit} = filter
+
+  try {
+    const [orders, total] = await Promise.all([
+      await db.order.findMany({
+        skip: page * limit,
+        take: limit,
+        orderBy: {
+          createdAt: 'desc'
+        }
+      }),
+      await db.item.count()
+    ])
+
+    res.send({ orders, total })
+  } catch (error) {
+    console.error(error)
+    res.status(500).send({error: 'Something went wrong while getting orders'})
+  }
+})
+
 const idSchema = z.uuid()
 
 orderRouter.get('/:id', async (req, res) => {

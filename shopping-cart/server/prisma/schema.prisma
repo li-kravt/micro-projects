@@ -35,5 +35,6 @@ model Order {
   id     String       @id @default(uuid())
   items  OrderItem[]
   total  Float
+  createdAt DateTime @default(now())
 }
 
