@@ -13,8 +13,8 @@ const DEFAULT_FILTER = {
 }
 
 const filterSchema = z.object({
-  page: z.preprocess((value: string) => parseInt(value), z.int().min(1)).default(DEFAULT_FILTER.page).transform(page => page - 1),
-  limit: z.preprocess((value: string) => parseInt(value), z.int().min(1).max(10).optional()).default(DEFAULT_FILTER.limit),
+  page: z.preprocess((value: string) => Number(value), z.int().min(1)).default(DEFAULT_FILTER.page).transform(page => page - 1),
+  limit: z.preprocess((value: string) => Number(value), z.int().min(1).max(10).optional()).default(DEFAULT_FILTER.limit),
   ids: z.preprocess((value: string) => value.split(','), z.array(z.uuid()).min(1)).optional()
 })
 
